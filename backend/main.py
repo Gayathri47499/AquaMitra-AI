@@ -72,7 +72,13 @@ supabase: SupabaseClient = create_client(
 def get_meena_client():
     space_id = os.environ["MEENAMITRA_SPACE_ID"]
     token = os.environ.get("HF_TOKEN")
-    return Client(space_id, hf_token=token or None)
+    
+    if token:
+        return Client(
+            space_id,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    return Client(space_id)
 
 
 def ask_meena(question: str) -> str:

@@ -10,7 +10,10 @@ from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client, Client as SupabaseClient
-from backend.rag_service import retrieve_passages, format_passages
+try:
+    from backend.rag_service import retrieve_passages, format_passages
+except ModuleNotFoundError:
+    from rag_service import retrieve_passages, format_passages
 from pathlib import Path
 
 load_dotenv(Path(__file__).resolve().parent / ".env")

@@ -1,6 +1,9 @@
+
 fastapi
 uvicorn[standard]
 python-dotenv
 httpx
 gradio_client
 supabase
+sentence-transformers
+google-genai

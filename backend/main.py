@@ -1,15 +1,19 @@
 import os
 import re
 import uuid
+from google import genai
 from functools import lru_cache
 
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
-from gradio_client import Client
 from pydantic import BaseModel
 from supabase import create_client, Client as SupabaseClient
+from backend.rag_service import retrieve_passages, format_passages
+from pathlib import Path
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 
 # ==========================================================
@@ -65,35 +69,105 @@ supabase: SupabaseClient = create_client(
 
 
 # ==========================================================
-# GRADIO CLIENT HELPERS FOR MEENAAI SPACE
+# GEMINI CLIENT HELPERS FOR ANSWER GENERATION
 # ==========================================================
 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_MODEL = "gemini-3.5-flash-lite"
+
+
 @lru_cache(maxsize=1)
-def get_meena_client():
-    space_id = os.environ["MEENAMITRA_SPACE_ID"]
-    token = os.environ.get("HF_TOKEN")
-    
-    if token:
-        return Client(
-            space_id,
-            headers={"Authorization": f"Bearer {token}"}
+def get_gemini_client():
+    if not GEMINI_API_KEY:
+        raise RuntimeError("GEMINI_API_KEY is not configured.")
+    return genai.Client(api_key=GEMINI_API_KEY)
+
+
+def ask_meena(question: str, context: str) -> str:
+    client = get_gemini_client()
+
+    if context and context.strip():
+        reference_section = (
+            "Use the following retrieved aquaculture information "
+            "as supporting evidence where relevant. The passages "
+            "may not answer every part of the question.\n\n"
+            + context.strip()
         )
-    return Client(space_id)
+    else:
+        reference_section = (
+            "No relevant reference passages were retrieved. "
+            "Use your general knowledge of aquaculture cautiously. "
+            "Do not invent citations, precise facts, or dosages."
+        )
+
+    prompt = f"""
+You are MeenaMitra, a friendly, practical AI assistant for fish
+farmers. Your goal is to help farmers make better-informed
+decisions, not to summarize documents.
+
+HOW TO RESPOND
+1. Understand what the farmer actually wants to know.
+2. Start with a direct, useful answer in natural, conversational
+   English.
+3. Give practical suggestions and explain briefly why they help.
+4. Adapt your advice to the fish species, size, pond conditions,
+   and symptoms when that information is available.
+5. If important details are missing, ask one or two relevant
+   follow-up questions after giving safe general guidance.
+6. Use short paragraphs and bullets when they improve readability.
+7. Avoid repetitive introductions, robotic wording, and unnecessary
+   disclaimers.
 
 
-def ask_meena(question: str) -> str:
-    client = get_meena_client()
-    result = client.predict(
-        question,
-        api_name="/answer_question",
+HOW TO USE REFERENCE INFORMATION
+- Use relevant reference passages internally to improve the accuracy
+  and usefulness of your answer.
+- Your primary job is to help the farmer, not to describe your sources.
+- Do not mention the handbook, documents, retrieved passages, RAG,
+  or knowledge base in ordinary answers.
+- Do not include citations, page numbers, or source labels by default.
+- Explain recommendations directly in your own natural, conversational
+  style, as a knowledgeable aquaculture assistant would.
+- Only discuss a source if the farmer explicitly asks where information
+  came from or requests references.
+- Never invent facts or pretend unsupported claims are verified.
+- If information is uncertain, explain the uncertainty naturally.
+- If reference information is insufficient, use cautious general
+  aquaculture knowledge where appropriate, or ask a useful follow-up.
+
+
+SAFETY
+- Never invent medicine, chemical, or treatment dosages.
+- For sudden fish deaths, severe illness, or widespread distress,
+  recommend urgent help from a fisheries officer or aquatic animal
+  health professional.
+- You may suggest safe observations and water-quality checks.
+- Do not claim a diagnosis without enough information.
+
+SCOPE
+- You specialize in fish farming and aquaculture.
+- For unrelated questions, politely explain your specialization
+  and invite the user to ask an aquaculture question.
+
+{reference_section}
+
+FARMER'S QUESTION:
+{question}
+
+Now answer the farmer directly as MeenaMitra.
+"""
+
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
     )
-    print("DEBUG - Question sent to Space:", question)
-    print("DEBUG - Raw Space result:", repr(result))
 
-    if not isinstance(result, str) or not result.strip():
-        raise RuntimeError("MeenaAI returned an empty response.")
+    answer = response.text
 
-    return result.strip()
+    if not answer or not answer.strip():
+        raise RuntimeError("Gemini returned an empty response.")
+
+    return answer.strip()
 
 
 # ==========================================================
@@ -303,7 +377,7 @@ def root():
 
     return {
         "message": "MeenaMitra API is running",
-        "model": "Qwen3-4B fine-tuned via Gradio Space",
+        "model": "Gemini 2.5 Flash",
         "language": "English"
     }
 
@@ -630,20 +704,25 @@ async def chat(data: ChatRequest):
         }
 
 
-    # ======================================================
-    # 4. CALL HUGGING FACE SPACE VIA GRADIO CLIENT
-    # ======================================================
+    # 4. RETRIEVE REFERENCE PASSAGES AND GENERATE AN ANSWER
 
     try:
-        # Calls the updated Gradio Space backend
-        answer = ask_meena(question)
+        passages = retrieve_passages(question, top_k=5)
+        context = format_passages(passages)
+
+    # Gemini can answer even when retrieval finds no passages.
+    # When passages exist, they are supplied as reference evidence.
+        answer = ask_meena(question, context)
 
     except Exception as e:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Model server error: {str(e)}"
+       print("RAG OR GEMINI ERROR:", repr(e))
+       raise HTTPException(
+        status_code=502,
+        detail=(
+            "MeenaMitra is temporarily unable to generate an answer. "
+            "Please try again shortly."
         )
-
+    )
 
     # ======================================================
     # 5. CLEAN MODEL OUTPUT

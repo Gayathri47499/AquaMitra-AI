@@ -1,14 +1,15 @@
 import os
 import re
 import uuid
+from functools import lru_cache
 
 import httpx
-
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
+from gradio_client import Client
 from pydantic import BaseModel
-from supabase import create_client, Client
+from supabase import create_client, Client as SupabaseClient
 
 
 # ==========================================================
@@ -24,13 +25,11 @@ SUPABASE_PUBLISHABLE_KEY = os.getenv(
     "SUPABASE_PUBLISHABLE_KEY"
 )
 
-MODEL_URL = os.getenv(
-    "MEENAMITRA_MODEL_URL"
+MEENAMITRA_SPACE_ID = os.getenv(
+    "MEENAMITRA_SPACE_ID"
 )
 
-MODEL_API_KEY = os.getenv(
-    "MEENAMITRA_MODEL_API_KEY"
-)
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 
 # ==========================================================
@@ -49,15 +48,9 @@ if not SUPABASE_PUBLISHABLE_KEY:
     )
 
 
-if not MODEL_URL:
+if not MEENAMITRA_SPACE_ID:
     raise RuntimeError(
-        "MEENAMITRA_MODEL_URL is missing"
-    )
-
-
-if not MODEL_API_KEY:
-    raise RuntimeError(
-        "MEENAMITRA_MODEL_API_KEY is missing"
+        "MEENAMITRA_SPACE_ID is missing"
     )
 
 
@@ -65,10 +58,36 @@ if not MODEL_API_KEY:
 # SUPABASE CLIENT
 # ==========================================================
 
-supabase: Client = create_client(
+supabase: SupabaseClient = create_client(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY
 )
+
+
+# ==========================================================
+# GRADIO CLIENT HELPERS FOR MEENAAI SPACE
+# ==========================================================
+
+@lru_cache(maxsize=1)
+def get_meena_client():
+    space_id = os.environ["MEENAMITRA_SPACE_ID"]
+    token = os.environ.get("HF_TOKEN")
+    return Client(space_id, hf_token=token or None)
+
+
+def ask_meena(question: str) -> str:
+    client = get_meena_client()
+    result = client.predict(
+        question,
+        api_name="/answer_question",
+    )
+    print("DEBUG - Question sent to Space:", question)
+    print("DEBUG - Raw Space result:", repr(result))
+
+    if not isinstance(result, str) or not result.strip():
+        raise RuntimeError("MeenaAI returned an empty response.")
+
+    return result.strip()
 
 
 # ==========================================================
@@ -151,10 +170,6 @@ def clean_model_output(text: str) -> str:
     """
     Clean unwanted multilingual/random characters from
     the small language model output.
-
-    The current production model is English-focused.
-    Telugu/multilingual generation is intentionally not
-    enabled in this version.
     """
 
     if not text:
@@ -163,8 +178,6 @@ def clean_model_output(text: str) -> str:
             "Please ask your fish-farming question again."
         )
 
-    # Split into lines so unrelated multilingual lines
-    # can be removed without damaging the whole answer.
     lines = text.splitlines()
 
     cleaned_lines = []
@@ -176,12 +189,11 @@ def clean_model_output(text: str) -> str:
         if not line:
             continue
 
-        # Remove obvious CJK characters
+        # Remove CJK characters
         if re.search(
             r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]",
             line
         ):
-            # Try removing only the non-English characters
             line = re.sub(
                 r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]",
                 " ",
@@ -202,22 +214,20 @@ def clean_model_output(text: str) -> str:
             line
         )
 
-        # Remove Telugu characters from model output.
-        # Telugu is not supported in this production version.
+        # Remove Telugu characters
         line = re.sub(
             r"[\u0c00-\u0c7f]",
             " ",
             line
         )
 
-        # Remove any remaining non-ASCII characters.
+        # Remove any remaining non-ASCII characters
         line = re.sub(
             r"[^\x00-\x7F]",
             " ",
             line
         )
 
-        # Normalize spaces
         line = re.sub(
             r"\s+",
             " ",
@@ -227,7 +237,6 @@ def clean_model_output(text: str) -> str:
         if not line:
             continue
 
-        # Keep only lines containing meaningful English text.
         english_letters = len(
             re.findall(
                 r"[A-Za-z]",
@@ -240,8 +249,6 @@ def clean_model_output(text: str) -> str:
 
     cleaned = " ".join(cleaned_lines).strip()
 
-    # Remove common unwanted model behavior:
-    # repeating the question or asking another question.
     cleaned = re.sub(
         r"\bWhy should you check water quality.*$",
         "",
@@ -263,15 +270,12 @@ def clean_model_output(text: str) -> str:
         flags=re.IGNORECASE
     ).strip()
 
-    # Remove excessive whitespace again
     cleaned = re.sub(
         r"\s+",
         " ",
         cleaned
     ).strip()
 
-    # If nothing meaningful survived the cleanup,
-    # provide a safe aquaculture fallback.
     if len(cleaned) < 20:
 
         return (
@@ -293,7 +297,7 @@ def root():
 
     return {
         "message": "MeenaMitra API is running",
-        "model": "Qwen2.5-1.5B fine-tuned for aquaculture",
+        "model": "Qwen3-4B fine-tuned via Gradio Space",
         "language": "English"
     }
 
@@ -525,10 +529,6 @@ async def chat(data: ChatRequest):
 
         conversation_id = data.conversation_id
 
-        # --------------------------------------------------
-        # Verify that the conversation belongs to this user
-        # --------------------------------------------------
-
         try:
 
             existing = (
@@ -569,65 +569,14 @@ async def chat(data: ChatRequest):
 
     else:
 
-        # --------------------------------------------------
-        # FIRST MESSAGE OF NEW CONVERSATION
-        # --------------------------------------------------
-
         conversation_id = str(
             uuid.uuid4()
         )
 
 
     # ======================================================
-    # 3. LOAD PREVIOUS MESSAGES
+    # 3. ENGLISH-ONLY MODE CHECK
     # ======================================================
-
-    try:
-
-        previous_result = (
-            supabase
-            .table("chat_history")
-            .select(
-                "question, answer, created_at"
-            )
-            .eq(
-                "conversation_id",
-                conversation_id
-            )
-            .eq(
-                "user_id",
-                user_id
-            )
-            .order(
-                "created_at",
-                desc=False
-            )
-            .limit(8)
-            .execute()
-        )
-
-        previous_messages = (
-            previous_result.data or []
-        )
-
-    except Exception as e:
-
-        raise HTTPException(
-            status_code=500,
-            detail=(
-                "Could not load conversation history: "
-                f"{str(e)}"
-            )
-        )
-
-
-    # ======================================================
-    # 4. ENGLISH-ONLY MODE
-    # ======================================================
-
-    # The current production model is English-focused.
-    # Do not allow the weak Telugu generation path to
-    # produce multilingual/random output.
 
     if contains_telugu(question):
 
@@ -638,8 +587,6 @@ async def chat(data: ChatRequest):
             "fish-farming question in English."
         )
 
-        # Save the message to history even though the
-        # current model did not generate the answer.
         try:
 
             save_result = (
@@ -647,35 +594,20 @@ async def chat(data: ChatRequest):
                 .table("chat_history")
                 .insert(
                     {
-                        "user_id":
-                            user_id,
-
-                        "conversation_id":
-                            conversation_id,
-
-                        "question":
-                            question,
-
-                        "answer":
-                            answer
+                        "user_id": user_id,
+                        "conversation_id": conversation_id,
+                        "question": question,
+                        "answer": answer
                     }
                 )
                 .execute()
             )
 
             if not save_result.data:
-
-                raise Exception(
-                    "Supabase did not return saved record"
-                )
+                raise Exception("Supabase did not return saved record")
 
         except Exception as e:
-
-            print(
-                "HISTORY SAVE ERROR:",
-                str(e)
-            )
-
+            print("HISTORY SAVE ERROR:", str(e))
             raise HTTPException(
                 status_code=500,
                 detail=(
@@ -686,276 +618,63 @@ async def chat(data: ChatRequest):
             )
 
         return {
-            "conversation_id":
-                conversation_id,
-
-            "question":
-                question,
-
-            "answer":
-                answer
+            "conversation_id": conversation_id,
+            "question": question,
+            "answer": answer
         }
 
 
     # ======================================================
-    # 5. SYSTEM PROMPT
+    # 4. CALL HUGGING FACE SPACE VIA GRADIO CLIENT
     # ======================================================
-
-    system_prompt = """
-You are MeenaMitra, a specialized AI advisor for
-small-scale pond-based fish farming and aquaculture.
-
-Your purpose is to provide practical, safe and understandable
-advice to fish farmers.
-
-IMPORTANT RULES:
-
-1. Answer the farmer's actual question directly.
-2. Stay strictly focused on pond fish farming and aquaculture.
-3. Do not discuss aquariums unless explicitly asked.
-4. Answer ONLY in simple English.
-5. Never output Telugu, Hindi, Arabic, Chinese, Japanese,
-   Korean, or any other language.
-6. Never output random characters or mixed-language text.
-7. Give simple and practical advice.
-8. Do not invent exact values when important information
-   is missing.
-9. Consider fish species, fish size, biomass, pond size,
-   temperature, dissolved oxygen, pH, ammonia, feeding,
-   and pond conditions when relevant.
-10. If important information is missing, explain what
-    information the farmer should provide.
-11. Never generate programming code unless explicitly requested.
-12. Do not repeat the user's question.
-13. Do not ask a new unrelated question at the end.
-14. Do not continue with another topic after answering.
-15. Keep the answer concise, preferably 3 to 6 sentences.
-16. Do not make unsupported medical or veterinary claims.
-17. If the question is unrelated to fish farming, say:
-    "I am MeenaMitra, an aquaculture advisor. I can help
-    only with fish-farming related questions."
-
-The answer must contain ONLY the response to the user's
-current question.
-"""
-
-
-    # ======================================================
-    # 6. BUILD MODEL MESSAGES
-    # ======================================================
-
-    messages = [
-        {
-            "role": "system",
-            "content": system_prompt
-        }
-    ]
-
-
-    # ------------------------------------------------------
-    # Previous conversation context
-    # ------------------------------------------------------
-
-    for item in previous_messages:
-
-        messages.append(
-            {
-                "role": "user",
-                "content": item["question"]
-            }
-        )
-
-        messages.append(
-            {
-                "role": "assistant",
-                "content": item["answer"]
-            }
-        )
-
-
-    # ------------------------------------------------------
-    # Current question
-    # ------------------------------------------------------
-
-    messages.append(
-        {
-            "role": "user",
-            "content": question
-        }
-    )
-
-
-    # ======================================================
-    # 7. MODEL REQUEST
-    # ======================================================
-
-    payload = {
-
-        "model": "meenamitra",
-
-        "messages": messages,
-
-        "temperature": 0.15,
-
-        "top_p": 0.85,
-
-        "repeat_penalty": 1.15,
-
-        "max_tokens": 160
-    }
-
 
     try:
-
-        timeout = httpx.Timeout(
-
-            connect=10.0,
-
-            read=180.0,
-
-            write=30.0,
-
-            pool=30.0
-        )
-
-
-        async with httpx.AsyncClient(
-            timeout=timeout
-        ) as client:
-
-            response = await client.post(
-
-                f"{MODEL_URL.rstrip('/')}"
-                "/v1/chat/completions",
-
-                headers={
-                    "Authorization":
-                        f"Bearer {MODEL_API_KEY}"
-                },
-
-                json=payload
-            )
-
-
-            if response.status_code != 200:
-
-                raise HTTPException(
-
-                    status_code=502,
-
-                    detail=(
-                        "Model server error: "
-                        f"{response.text}"
-                    )
-                )
-
-
-            result = response.json()
-
-
-            try:
-
-                answer = (
-                    result["choices"][0]
-                    ["message"]
-                    ["content"]
-                    .strip()
-                )
-
-            except (
-                KeyError,
-                IndexError,
-                TypeError
-            ):
-
-                raise HTTPException(
-
-                    status_code=502,
-
-                    detail=(
-                        "Unexpected response "
-                        "from model server"
-                    )
-                )
-
-
-    except HTTPException:
-        raise
+        # Calls the updated Gradio Space backend
+        answer = ask_meena(question)
 
     except Exception as e:
-
         raise HTTPException(
-
-            status_code=500,
-
-            detail=(
-                "Model request failed: "
-                f"{str(e)}"
-            )
+            status_code=502,
+            detail=f"Model server error: {str(e)}"
         )
 
 
     # ======================================================
-    # 8. CLEAN MODEL OUTPUT
+    # 5. CLEAN MODEL OUTPUT
     # ======================================================
 
     answer = clean_model_output(answer)
 
 
     # ======================================================
-    # 9. SAVE TO SUPABASE
+    # 6. SAVE TO SUPABASE
     # ======================================================
 
     try:
 
         save_result = (
-
             supabase
-
             .table("chat_history")
-
             .insert(
                 {
-                    "user_id":
-                        user_id,
-
-                    "conversation_id":
-                        conversation_id,
-
-                    "question":
-                        question,
-
-                    "answer":
-                        answer
+                    "user_id": user_id,
+                    "conversation_id": conversation_id,
+                    "question": question,
+                    "answer": answer
                 }
             )
-
             .execute()
         )
 
-
         if not save_result.data:
-
-            raise Exception(
-                "Supabase did not return saved record"
-            )
-
+            raise Exception("Supabase did not return saved record")
 
     except Exception as e:
 
-        print(
-            "HISTORY SAVE ERROR:",
-            str(e)
-        )
-
-        # IMPORTANT:
-        # Do not silently return success if the
-        # database save failed.
+        print("HISTORY SAVE ERROR:", str(e))
 
         raise HTTPException(
-
             status_code=500,
-
             detail=(
                 "AI answered successfully, but "
                 "the conversation could not be saved: "
@@ -965,19 +684,13 @@ current question.
 
 
     # ======================================================
-    # 10. RETURN RESPONSE
+    # 7. RETURN RESPONSE
     # ======================================================
 
     return {
-
-        "conversation_id":
-            conversation_id,
-
-        "question":
-            question,
-
-        "answer":
-            answer
+        "conversation_id": conversation_id,
+        "question": question,
+        "answer": answer
     }
 
 
@@ -990,17 +703,12 @@ def history(
     authorization: str | None = Header(default=None)
 ):
 
-    # ======================================================
-    # 1. GET ACCESS TOKEN FROM AUTHORIZATION HEADER
-    # ======================================================
-
     if not authorization:
 
         raise HTTPException(
             status_code=401,
             detail="Authorization header is missing"
         )
-
 
     if not authorization.startswith("Bearer "):
 
@@ -1009,11 +717,9 @@ def history(
             detail="Invalid authorization header"
         )
 
-
     access_token = authorization[
         len("Bearer "):
     ].strip()
-
 
     if not access_token:
 
@@ -1021,11 +727,6 @@ def history(
             status_code=401,
             detail="Access token is missing"
         )
-
-
-    # ======================================================
-    # 2. VERIFY USER
-    # ======================================================
 
     try:
 
@@ -1054,11 +755,6 @@ def history(
             status_code=401,
             detail=f"Authentication failed: {str(e)}"
         )
-
-
-    # ======================================================
-    # 3. LOAD USER'S CHAT HISTORY
-    # ======================================================
 
     try:
 
@@ -1091,20 +787,13 @@ def history(
             )
         )
 
-
-    # ======================================================
-    # 4. GROUP MESSAGES BY CONVERSATION
-    # ======================================================
-
     conversations = {}
-
 
     for row in rows:
 
         conversation_id = row[
             "conversation_id"
         ]
-
 
         if conversation_id not in conversations:
 
@@ -1125,7 +814,6 @@ def history(
                     []
             }
 
-
         conversations[
             conversation_id
         ]["messages"].append(
@@ -1144,11 +832,6 @@ def history(
                     row["created_at"]
             }
         )
-
-
-    # ======================================================
-    # 5. RETURN GROUPED HISTORY
-    # ======================================================
 
     return {
 

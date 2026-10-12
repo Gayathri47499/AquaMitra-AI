@@ -10,10 +10,20 @@ from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client, Client as SupabaseClient
+
 try:
-    from backend.rag_service import retrieve_passages, format_passages
+    from backend.rag_service import (
+        retrieve_passages,
+        format_passages,
+        generate_hf_answer,
+    )
 except ModuleNotFoundError:
-    from rag_service import retrieve_passages, format_passages
+    from rag_service import (
+        retrieve_passages,
+        format_passages,
+        generate_hf_answer,
+    )
+
 from pathlib import Path
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
@@ -380,7 +390,7 @@ def root():
 
     return {
         "message": "MeenaMitra API is running",
-        "model": "Gemini 2.5 Flash",
+        "model": "Gemini 3.5 Flash Lite",
         "language": "English"
     }
 
@@ -707,25 +717,26 @@ async def chat(data: ChatRequest):
         }
 
 
-    # 4. RETRIEVE REFERENCE PASSAGES AND GENERATE AN ANSWER
+    # ======================================================
+    # 4. RETRIEVE REFERENCE PASSAGES AND GENERATE ANSWER
+    # ======================================================
 
     try:
         passages = retrieve_passages(question, top_k=5)
         context = format_passages(passages)
 
-    # Gemini can answer even when retrieval finds no passages.
-    # When passages exist, they are supplied as reference evidence.
-        answer = ask_meena(question, context)
+        answer = generate_hf_answer(question, context)
 
     except Exception as e:
-       print("RAG OR GEMINI ERROR:", repr(e))
-       raise HTTPException(
-        status_code=502,
-        detail=(
-            "MeenaMitra is temporarily unable to generate an answer. "
-            "Please try again shortly."
+        print("RAG OR HF ERROR:", repr(e))
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "MeenaMitra is temporarily unable to generate an answer. "
+                "Please try again shortly."
+            )
         )
-    )
+
 
     # ======================================================
     # 5. CLEAN MODEL OUTPUT

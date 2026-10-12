@@ -981,3 +981,74 @@ def history(
                 conversations.values()
             )
     }
+
+@app.delete("/history/{conversation_id}")
+def delete_conversation(
+    conversation_id: str,
+    authorization: str | None = Header(default=None),
+):
+    """Delete a conversation belonging to the authenticated user."""
+
+    # Validate the authorization header.
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Valid authorization header is required",
+        )
+
+    access_token = authorization[len("Bearer "):].strip()
+
+    if not access_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Access token is missing",
+        )
+
+    # Verify the logged-in user.
+    try:
+        user_result = supabase.auth.get_user(access_token)
+
+        if not user_result or not user_result.user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authentication token",
+            )
+
+        user_id = user_result.user.id
+
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication failed",
+        )
+
+    # Delete only this user's selected conversation.
+    try:
+        result = (
+            supabase.table("chat_history")
+            .delete()
+            .eq("user_id", user_id)
+            .eq("conversation_id", conversation_id)
+            .execute()
+        )
+
+        if not result.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Conversation not found",
+            )
+
+        return {
+            "message": "Conversation deleted successfully",
+            "conversation_id": conversation_id,
+        }
+
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to delete conversation",
+        )

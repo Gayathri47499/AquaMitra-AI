@@ -3,9 +3,7 @@ import os
 from functools import lru_cache
 
 from dotenv import load_dotenv
-
 from supabase import create_client
-
 
 load_dotenv()
 
@@ -24,51 +22,19 @@ def get_supabase():
             "Supabase URL or server secret is not configured."
         )
 
-    return create_client(
-        SUPABASE_URL,
-        SUPABASE_SECRET_KEY
-    )
-
-
-@lru_cache(maxsize=1)
-def get_embedding_model():
-    from sentence_transformers import SentenceTransformer
-
-    return SentenceTransformer(
-        "sentence-transformers/all-MiniLM-L6-v2",
-        device="cpu"
-    )
+    return create_client(SUPABASE_URL, SUPABASE_SECRET_KEY)
 
 
 def retrieve_passages(question: str, top_k: int = TOP_K):
+    """Temporarily skip vector retrieval until a compatible remote
+    embedding service is configured. Do not query MiniLM vectors
+    with embeddings from a different model.
+    """
     if not question or not question.strip():
         return []
 
-    model = get_embedding_model()
-    embedding = model.encode(
-        question.strip(),
-        normalize_embeddings=True
-    ).tolist()
-
-    response = get_supabase().rpc(
-        "match_knowledge_passages",
-        {
-            "query_embedding": embedding,
-            "match_count": min(max(top_k, 1), 10),
-            "filter_document_id": DOCUMENT_ID,
-        },
-    ).execute()
-
-    passages = response.data or []
-
-    relevant = [
-        passage
-        for passage in passages
-        if float(passage.get("similarity", 0.0))
-        >= MIN_SIMILARITY
-    ]
-
-    return relevant
+    # Safe fallback: Gemini can still answer without retrieved context.
+    return []
 
 
 def format_passages(passages):
@@ -85,14 +51,11 @@ def format_passages(passages):
             continue
 
         source = (
-            f"ICAR Handbook of Fisheries and Aquaculture, "
-            f"page {page}"
+            f"ICAR Handbook of Fisheries and Aquaculture, page {page}"
             if page is not None
             else "ICAR Handbook of Fisheries and Aquaculture"
         )
 
-        sections.append(
-            f"[Source: {source}]\n{content}"
-        )
+        sections.append(f"[Source: {source}]\n{content}")
 
     return "\n\n".join(sections)

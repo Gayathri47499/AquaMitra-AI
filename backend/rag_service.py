@@ -3,7 +3,7 @@ import os
 from functools import lru_cache
 
 from dotenv import load_dotenv
-from sentence_transformers import SentenceTransformer
+
 from supabase import create_client
 
 
@@ -32,8 +32,11 @@ def get_supabase():
 
 @lru_cache(maxsize=1)
 def get_embedding_model():
+    from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(
-        "sentence-transformers/all-MiniLM-L6-v2"
+        "sentence-transformers/all-MiniLM-L6-v2",
+        device="cpu"
     )
 
 

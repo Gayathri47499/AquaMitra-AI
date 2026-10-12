@@ -95,6 +95,22 @@ def get_gemini_client():
         raise RuntimeError("GEMINI_API_KEY is not configured.")
     return genai.Client(api_key=GEMINI_API_KEY)
 
+def is_aquaculture_question(question: str) -> bool:
+    text = question.lower()
+
+    keywords = [
+        "fish", "fishing", "aquaculture", "aquaculture",
+        "pond", "prawn", "shrimp", "hatchery", "fingerling",
+        "fish farm", "fish farming", "stocking", "fish feed",
+        "feeding", "dissolved oxygen", "water quality",
+        "ammonia", "nitrite", "ph", "algae", "fish disease",
+        "fish health", "tilapia", "rohu", "catla", "carp",
+        "biofloc", "aquaponics", "gill", "fish pond",
+        "fish growth", "fish mortality", "fish death",
+    ]
+
+    return any(keyword in text for keyword in keywords)
+
 
 def ask_meena(question: str, context: str) -> str:
     client = get_gemini_client()
@@ -709,6 +725,32 @@ async def chat(data: ChatRequest):
                     f"{str(e)}"
                 )
             )
+
+        return {
+            "conversation_id": conversation_id,
+            "question": question,
+            "answer": answer
+        }
+    
+    # AQUACULTURE SCOPE CHECK
+    if not is_aquaculture_question(question):
+        answer = (
+            "I'm MeenaMitra, an AI assistant specializing in "
+            "fish farming and aquaculture. I can help with pond "
+            "management, water quality, fish feeding, fish health, "
+            "breeding, and farm practices. Please ask an "
+            "aquaculture-related question."
+        )
+
+        try:
+            supabase.table("chat_history").insert({
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "question": question,
+                "answer": answer
+            }).execute()
+        except Exception as e:
+            print("HISTORY SAVE ERROR:", repr(e))
 
         return {
             "conversation_id": conversation_id,

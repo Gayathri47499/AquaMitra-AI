@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { BRAND_NAME } from "./brand";
+import AnswerText from "./components/AnswerText";
 import {
   AmbientBackground,
   BrandMark,
@@ -1384,14 +1385,14 @@ function App() {
                         </span>
 
                         <div
-                          className={`whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-[0.95rem] leading-relaxed ${
+                          className={`break-words rounded-2xl px-4 py-3 text-[0.95rem] leading-relaxed ${
                             isUser
                               ? "rounded-tr-md bg-tide-500/20 text-foam-50 ring-1 ring-tide-400/25"
                               : "glass-panel rounded-tl-md text-foam-50/90"
                           }`}
                         >
 
-                          {message.content}
+                          {isUser ? message.content : <AnswerText text={message.content} />}
 
                         </div>
 

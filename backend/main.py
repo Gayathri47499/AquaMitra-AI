@@ -1,10 +1,8 @@
 import os
 import re
 import uuid
-from google import genai
-from functools import lru_cache
+from pathlib import Path
 
-import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,7 +22,6 @@ except ModuleNotFoundError:
         generate_hf_answer,
     )
 
-from pathlib import Path
 
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
@@ -42,6 +39,7 @@ SUPABASE_PUBLISHABLE_KEY = os.getenv(
     "SUPABASE_PUBLISHABLE_KEY"
 )
 
+# Name kept as configured on the hosting service.
 MEENAMITRA_SPACE_ID = os.getenv(
     "MEENAMITRA_SPACE_ID"
 )
@@ -82,24 +80,14 @@ supabase: SupabaseClient = create_client(
 
 
 # ==========================================================
-# GEMINI CLIENT HELPERS FOR ANSWER GENERATION
+# SCOPE CHECK
 # ==========================================================
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL = "gemini-3.5-flash-lite"
-
-
-@lru_cache(maxsize=1)
-def get_gemini_client():
-    if not GEMINI_API_KEY:
-        raise RuntimeError("GEMINI_API_KEY is not configured.")
-    return genai.Client(api_key=GEMINI_API_KEY)
 
 def is_aquaculture_question(question: str) -> bool:
     text = question.lower()
 
     keywords = [
-        "fish", "fishing", "aquaculture", "aquaculture",
+        "fish", "fishing", "aquaculture",
         "pond", "prawn", "shrimp", "hatchery", "fingerling",
         "fish farm", "fish farming", "stocking", "fish feed",
         "feeding", "dissolved oxygen", "water quality",
@@ -112,99 +100,12 @@ def is_aquaculture_question(question: str) -> bool:
     return any(keyword in text for keyword in keywords)
 
 
-def ask_meena(question: str, context: str) -> str:
-    client = get_gemini_client()
-
-    if context and context.strip():
-        reference_section = (
-            "Use the following retrieved aquaculture information "
-            "as supporting evidence where relevant. The passages "
-            "may not answer every part of the question.\n\n"
-            + context.strip()
-        )
-    else:
-        reference_section = (
-            "No relevant reference passages were retrieved. "
-            "Use your general knowledge of aquaculture cautiously. "
-            "Do not invent citations, precise facts, or dosages."
-        )
-
-    prompt = f"""
-You are MeenaMitra, a friendly, practical AI assistant for fish
-farmers. Your goal is to help farmers make better-informed
-decisions, not to summarize documents.
-
-HOW TO RESPOND
-1. Understand what the farmer actually wants to know.
-2. Start with a direct, useful answer in natural, conversational
-   English.
-3. Give practical suggestions and explain briefly why they help.
-4. Adapt your advice to the fish species, size, pond conditions,
-   and symptoms when that information is available.
-5. If important details are missing, ask one or two relevant
-   follow-up questions after giving safe general guidance.
-6. Use short paragraphs and bullets when they improve readability.
-7. Avoid repetitive introductions, robotic wording, and unnecessary
-   disclaimers.
-
-
-HOW TO USE REFERENCE INFORMATION
-- Use relevant reference passages internally to improve the accuracy
-  and usefulness of your answer.
-- Your primary job is to help the farmer, not to describe your sources.
-- Do not mention the handbook, documents, retrieved passages, RAG,
-  or knowledge base in ordinary answers.
-- Do not include citations, page numbers, or source labels by default.
-- Explain recommendations directly in your own natural, conversational
-  style, as a knowledgeable aquaculture assistant would.
-- Only discuss a source if the farmer explicitly asks where information
-  came from or requests references.
-- Never invent facts or pretend unsupported claims are verified.
-- If information is uncertain, explain the uncertainty naturally.
-- If reference information is insufficient, use cautious general
-  aquaculture knowledge where appropriate, or ask a useful follow-up.
-
-
-SAFETY
-- Never invent medicine, chemical, or treatment dosages.
-- For sudden fish deaths, severe illness, or widespread distress,
-  recommend urgent help from a fisheries officer or aquatic animal
-  health professional.
-- You may suggest safe observations and water-quality checks.
-- Do not claim a diagnosis without enough information.
-
-SCOPE
-- You specialize in fish farming and aquaculture.
-- For unrelated questions, politely explain your specialization
-  and invite the user to ask an aquaculture question.
-
-{reference_section}
-
-FARMER'S QUESTION:
-{question}
-
-Now answer the farmer directly as MeenaMitra.
-"""
-
-    response = client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
-    )
-
-    answer = response.text
-
-    if not answer or not answer.strip():
-        raise RuntimeError("Gemini returned an empty response.")
-
-    return answer.strip()
-
-
 # ==========================================================
 # FASTAPI APP
 # ==========================================================
 
 app = FastAPI(
-    title="MeenaMitra API",
+    title="AquaMitra AI API",
     description="AI-powered aquaculture advisor",
     version="1.0.0"
 )
@@ -266,7 +167,7 @@ def contains_telugu(text: str) -> bool:
     """
 
     return any(
-        "\u0c00" <= char <= "\u0c7f"
+        "ఀ" <= char <= "౿"
         for char in text
     )
 
@@ -275,123 +176,78 @@ def contains_telugu(text: str) -> bool:
 # MODEL OUTPUT CLEANER
 # ==========================================================
 
+# Follow-up lines the model sometimes adds at the end of an answer.
+JUNK_LINE_STARTS = (
+    "why should you check water quality",
+    "what should i check first",
+    "what else",
+)
+
+
 def clean_model_output(text: str) -> str:
     """
-    Clean unwanted multilingual/random characters from
-    the small language model output.
+    Clean the model output but keep its structure:
+    line breaks, numbered steps, bullets, and normal punctuation.
+    Only removes chat-template leftovers, hidden reasoning,
+    characters from scripts the model drifts into, and control characters.
     """
 
-    if not text:
+    if not text or not text.strip():
         return (
             "I could not generate a reliable answer. "
             "Please ask your fish-farming question again."
         )
 
-    lines = text.splitlines()
+    # Remove chat-template leftovers and hidden reasoning, if any
+    text = re.sub(r"<\|im_start\|>|<\|im_end\|>|<\|endoftext\|>", "", text)
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL | re.IGNORECASE)
 
-    cleaned_lines = []
+    # Remove characters from scripts the model sometimes drifts into
+    text = re.sub(
+        r"[぀-ヿ㐀-䶿一-鿿"
+        r"؀-ۿ가-힯ఀ-౿]",
+        "",
+        text,
+    )
 
-    for line in lines:
+    # Remove control characters but keep line breaks and tabs
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)
 
-        line = line.strip()
+    # Replace typographic characters with plain ASCII
+    for old, new in {
+        "‘": "'", "’": "'",
+        "“": '"', "”": '"',
+        "–": "-", "—": "-",
+        "•": "-", " ": " ",
+    }.items():
+        text = text.replace(old, new)
+
+    lines = []
+    for raw in text.replace("\r", "\n").split("\n"):
+        line = re.sub(r"[ \t]+", " ", raw).strip()
 
         if not line:
+            # keep at most one blank line between blocks
+            if lines and lines[-1] != "":
+                lines.append("")
             continue
 
-        # Remove CJK characters
-        if re.search(
-            r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]",
-            line
-        ):
-            line = re.sub(
-                r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]",
-                " ",
-                line
-            )
-
-        # Remove Arabic characters
-        line = re.sub(
-            r"[\u0600-\u06ff]",
-            " ",
-            line
-        )
-
-        # Remove Korean characters
-        line = re.sub(
-            r"[\uac00-\ud7af]",
-            " ",
-            line
-        )
-
-        # Remove Telugu characters
-        line = re.sub(
-            r"[\u0c00-\u0c7f]",
-            " ",
-            line
-        )
-
-        # Remove any remaining non-ASCII characters
-        line = re.sub(
-            r"[^\x00-\x7F]",
-            " ",
-            line
-        )
-
-        line = re.sub(
-            r"\s+",
-            " ",
-            line
-        ).strip()
-
-        if not line:
+        # skip lines with no letters or numbers, such as a lone "-"
+        if not re.search(r"[A-Za-z0-9]", line):
             continue
 
-        english_letters = len(
-            re.findall(
-                r"[A-Za-z]",
-                line
-            )
-        )
+        # skip follow-up questions the model sometimes adds at the end
+        if line.lower().lstrip("*#- ").startswith(JUNK_LINE_STARTS):
+            continue
 
-        if english_letters >= 4:
-            cleaned_lines.append(line)
+        lines.append(line)
 
-    cleaned = " ".join(cleaned_lines).strip()
-
-    cleaned = re.sub(
-        r"\bWhy should you check water quality.*$",
-        "",
-        cleaned,
-        flags=re.IGNORECASE
-    ).strip()
-
-    cleaned = re.sub(
-        r"\bWhat should I check first.*$",
-        "",
-        cleaned,
-        flags=re.IGNORECASE
-    ).strip()
-
-    cleaned = re.sub(
-        r"\bWhat else.*\?$",
-        "",
-        cleaned,
-        flags=re.IGNORECASE
-    ).strip()
-
-    cleaned = re.sub(
-        r"\s+",
-        " ",
-        cleaned
-    ).strip()
+    cleaned = "\n".join(lines).strip()
 
     if len(cleaned) < 20:
-
         return (
-            "If fish are coming to the surface and gasping for air, "
-            "check the dissolved oxygen level and water quality immediately. "
-            "Increase aeration and check whether the pond is overcrowded. "
-            "Avoid overfeeding until the water condition is stable."
+            "I could not produce a complete answer for that question. "
+            "Please rephrase it, or ask a more specific aquaculture question."
         )
 
     return cleaned
@@ -405,8 +261,8 @@ def clean_model_output(text: str) -> str:
 def root():
 
     return {
-        "message": "MeenaMitra API is running",
-        "model": "Gemini 3.5 Flash Lite",
+        "message": "AquaMitra AI API is running",
+        "model": "Qwen3-4B-Instruct-2507 with LoRA adapter (Hugging Face Space)",
         "language": "English"
     }
 
@@ -690,7 +546,7 @@ async def chat(data: ChatRequest):
     if contains_telugu(question):
 
         answer = (
-            "MeenaMitra currently supports English-language "
+            "AquaMitra AI currently supports English-language "
             "aquaculture guidance. Telugu support is planned "
             "for a future model improvement. Please ask your "
             "fish-farming question in English."
@@ -731,11 +587,11 @@ async def chat(data: ChatRequest):
             "question": question,
             "answer": answer
         }
-    
+
     # AQUACULTURE SCOPE CHECK
     if not is_aquaculture_question(question):
         answer = (
-            "I'm MeenaMitra, an AI assistant specializing in "
+            "I'm AquaMitra AI, an assistant specializing in "
             "fish farming and aquaculture. I can help with pond "
             "management, water quality, fish feeding, fish health, "
             "breeding, and farm practices. Please ask an "
@@ -774,7 +630,7 @@ async def chat(data: ChatRequest):
         raise HTTPException(
             status_code=502,
             detail=(
-                "MeenaMitra is temporarily unable to generate an answer. "
+                "AquaMitra AI is temporarily unable to generate an answer. "
                 "Please try again shortly."
             )
         )
@@ -981,6 +837,7 @@ def history(
                 conversations.values()
             )
     }
+
 
 @app.delete("/history/{conversation_id}")
 def delete_conversation(

@@ -26,3 +26,11 @@ Thumbs.db
 *.log
 
 knowledge_base/
+.env
+.env.*
+__pycache__/
+*.pyc
+unsloth_compiled_cache/
+*.safetensors
+*.pth
+optimizer.pt

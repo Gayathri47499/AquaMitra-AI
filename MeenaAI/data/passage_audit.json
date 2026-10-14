@@ -1,0 +1,30 @@
+{
+  "total_passages": 947,
+  "unique_sources": 19,
+  "word_count_min": 89,
+  "word_count_max": 400,
+  "word_count_average": 397.43,
+  "passages_under_80_words": 0,
+  "records_missing_required_fields": 0,
+  "passages_per_source": {
+    "SRC-001": 91,
+    "SRC-002": 4,
+    "SRC-003": 12,
+    "SRC-004": 106,
+    "SRC-005": 2,
+    "SRC-006": 60,
+    "SRC-007": 17,
+    "SRC-008": 25,
+    "SRC-009": 54,
+    "SRC-010": 257,
+    "SRC-011": 31,
+    "SRC-012": 2,
+    "SRC-013": 221,
+    "SRC-016": 17,
+    "SRC-017": 8,
+    "SRC-018": 4,
+    "SRC-019": 13,
+    "SRC-020": 11,
+    "SRC-021": 12
+  }
+}

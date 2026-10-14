@@ -1,0 +1,14 @@
+{
+  "internal_input_rows": 2443,
+  "external_input_rows": 20000,
+  "total_input_rows": 22443,
+  "merged_candidate_rows": 20986,
+  "rejected_rows": 1457,
+  "rejection_reasons": {
+    "aquaculture_keyword_screen_failed": 1453,
+    "answer_empty_or_too_short": 4
+  },
+  "warning": "Keyword screening is not factual validation. Near-duplicates, answer accuracy, provenance, and licenses still require review. Do not use the merged file for training yet.",
+  "merged_file": "C:\\Users\\gayat\\OneDrive\\Documents\\Desktop\\MeenaAI\\data\\merged_candidates.jsonl",
+  "rejected_file": "C:\\Users\\gayat\\OneDrive\\Documents\\Desktop\\MeenaAI\\data\\merge_rejected.jsonl"
+}

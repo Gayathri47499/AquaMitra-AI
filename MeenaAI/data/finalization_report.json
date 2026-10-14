@@ -1,0 +1,11 @@
+{
+  "input_candidates": 2453,
+  "eligible_passages": 928,
+  "source_match_candidates": 1496,
+  "candidates_needing_review": 957,
+  "review_flag_counts": {
+    "evidence_quote_not_found": 951,
+    "evidence_quote_missing_or_too_short": 7
+  },
+  "note": "A source quote match does not prove the answer is factually correct. All rows require license review before training."
+}

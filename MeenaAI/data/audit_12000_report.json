@@ -1,0 +1,109 @@
+{
+  "total_rows": 12000,
+  "rows_with_question_and_answer": 12000,
+  "missing_question": 0,
+  "missing_answer": 0,
+  "duplicate_questions_after_normalization": 4,
+  "source_counts": {
+    "SRC-001": 231,
+    "SRC-002": 8,
+    "SRC-003": 28,
+    "SRC-004": 274,
+    "SRC-005": 1,
+    "SRC-006": 151,
+    "SRC-007": 48,
+    "SRC-008": 64,
+    "SRC-009": 141,
+    "SRC-010": 630,
+    "SRC-011": 83,
+    "SRC-013": 595,
+    "SRC-016": 57,
+    "SRC-017": 23,
+    "SRC-018": 8,
+    "SRC-019": 37,
+    "SRC-020": 31,
+    "SRC-021": 43,
+    "UNKNOWN": 9547
+  },
+  "topic_counts": {
+    "UNKNOWN": 9547,
+    "fish_health": 694,
+    "pond_management": 659,
+    "feeding": 386,
+    "water_quality": 311,
+    "species": 146,
+    "biosecurity": 126,
+    "economics": 103,
+    "other": 20,
+    "safety": 4,
+    "disease_control": 2,
+    "feed_quality": 1,
+    "disease_management": 1
+  },
+  "samples": [
+    {
+      "keys": [
+        "passage_id",
+        "question",
+        "answer",
+        "topic",
+        "species",
+        "difficulty",
+        "evidence_quote",
+        "source_id",
+        "candidate_status",
+        "language",
+        "dataset_origin",
+        "review_status"
+      ],
+      "question": "Which species of fish and shellfish are covered in the country-specific case studies regarding on-farm feeding and feed management?",
+      "answer": "The country-specific case studies cover Nile tilapia (Oreochromis niloticus), Indian major carps including rohu (Labeo rohita), catla (Catla catla), and mrigal (Cirrhinus cirrhosus), giant river prawns (Macrobrachium rosenbergii), striped catfish (Pangasianodon hypophthalmus), whiteleg shrimp (Litopenaeus vannamei), and black tiger shrimp (Penaeus ",
+      "source_id": "SRC-001",
+      "source": null,
+      "topic": "species"
+    },
+    {
+      "keys": [
+        "passage_id",
+        "question",
+        "answer",
+        "topic",
+        "species",
+        "difficulty",
+        "evidence_quote",
+        "source_id",
+        "candidate_status",
+        "language",
+        "dataset_origin",
+        "review_status"
+      ],
+      "question": "What broad thematic areas are addressed in the case studies and invited reviews concerning aquaculture feed?",
+      "answer": "The broad thematic areas addressed are: i) current feed types (including fertilizers) and their use in semi-intensive and intensive farming systems; ii) on-farm feed production and management; iii) feeding and feed management strategies, feed procurement, transportation, and storage; iv) environmental, economic, regulatory, and legal frameworks of ",
+      "source_id": "SRC-001",
+      "source": null,
+      "topic": "pond_management"
+    },
+    {
+      "keys": [
+        "passage_id",
+        "question",
+        "answer",
+        "topic",
+        "species",
+        "difficulty",
+        "evidence_quote",
+        "source_id",
+        "candidate_status",
+        "language",
+        "dataset_origin",
+        "review_status"
+      ],
+      "question": "Where was the case study on on-farm feed management practices for giant river prawn (Macrobrachium rosenbergii) farming conducted?",
+      "answer": "The case study on giant river prawn (Macrobrachium rosenbergii) farming was conducted in southwest Bangladesh.",
+      "source_id": "SRC-001",
+      "source": null,
+      "topic": "species"
+    }
+  ],
+  "warning": "Structural audit only; does not establish factual accuracy, licensing, or test-set independence."
+}

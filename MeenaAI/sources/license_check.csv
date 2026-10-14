@@ -1,0 +1,20 @@
+source_id,publisher,exact_license,commercial_use,allowed_in_product,attribution,checked_by,checked_date,status,notes
+SRC-001,FAO,CC-BY-NC-SA 3.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,FAO Technical Paper No. 583 (Non-commercial)
+SRC-002,FAO,CC-BY-NC-SA 3.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,FAO Fisheries Technical Paper No. 325 (Non-commercial)
+SRC-003,FAO,CC-BY-NC-SA 3.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,FAO Fisheries Technical Paper No. 360 (Non-commercial)
+SRC-004,FAO,CC-BY-NC-SA 3.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,FAO Fisheries Technical Paper No. 578 (Non-commercial)
+SRC-005,FAO,CC-BY-NC-SA 3.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,FAO Fisheries Technical Paper No. 330 (Non-commercial)
+SRC-006,WorldFish,CC BY 4.0,Yes,Yes,Attribution Required,Gayathri,2026-10-09,PRODUCT_APPROVED,WorldFish Center Cereal Systems Initiative publication
+SRC-007,WorldFish,CC BY-NC 4.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,WorldFish open-access SOP manual on hatchery and fry production
+SRC-008,WorldFish,CC BY-NC 4.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,Country-specific BMP instruction manual published under CC BY-NC 4.0
+SRC-009,Agromisa,CC BY-NC-SA 3.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,Agrodok practical small-holder aquaculture manual
+SRC-010,NACA,CC BY-NC-ND 4.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,NACA regional aquatic disease guide
+SRC-011,MPEDA/NACA,CC BY-NC-ND 4.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,MPEDA-NACA technical assistance manual on sustainable shrimp health management
+SRC-012,FAO/NACA,CC BY-NC-SA 3.0,No,No,Attribution Required,Gayathri,2026-10-09,RESEARCH_ONLY,FAO Fisheries Technical Paper No. 402 regional health management guidelines
+SRC-013,NACA,CC BY 4.0,Yes,Yes,Attribution Required,Gayathri,2026-10-09,PRODUCT_APPROVED,NACA practical freshwater species extension manual
+SRC-016,SRAC,Public Domain / USDA Extension,Yes,Yes,Open Extension,Gayathri,2026-10-09,PRODUCT_APPROVED,USDA SRAC technical extension publication on water quality interpretation
+SRC-017,SRAC,Public Domain / USDA Extension,Yes,Yes,Open Extension,Gayathri,2026-10-09,PRODUCT_APPROVED,USDA SRAC technical extension publication on pond chemistry dynamics
+SRC-018,SRAC,Public Domain / USDA Extension,Yes,Yes,Open Extension,Gayathri,2026-10-09,PRODUCT_APPROVED,USDA SRAC technical extension publication on ammonia management
+SRC-019,SRAC,Public Domain / USDA Extension,Yes,Yes,Open Extension,Gayathri,2026-10-09,PRODUCT_APPROVED,USDA SRAC technical extension publication on pond fertilization
+SRC-020,SRAC,Public Domain / USDA Extension,Yes,Yes,Open Extension,Gayathri,2026-10-09,PRODUCT_APPROVED,USDA SRAC extension technical fact sheet on commercial catfish feeding
+SRC-021,SRAC,Public Domain / USDA Extension,Yes,Yes,Open Extension,Gayathri,2026-10-09,PRODUCT_APPROVED,USDA SRAC extension technical fact sheet on RAS tank systems

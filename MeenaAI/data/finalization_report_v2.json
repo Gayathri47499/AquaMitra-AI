@@ -1,0 +1,10 @@
+{
+  "input_candidates": 2453,
+  "source_matched_candidates": 1602,
+  "candidates_needing_review": 851,
+  "review_flag_counts": {
+    "evidence_quote_not_found": 851,
+    "evidence_quote_missing_or_too_short": 7
+  },
+  "warning": "Source matching is not factual verification or license approval."
+}

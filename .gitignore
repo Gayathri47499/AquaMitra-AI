@@ -34,3 +34,15 @@ unsloth_compiled_cache/
 *.safetensors
 *.pth
 optimizer.pt
+
+# Python cache and secrets
+.env
+.env.*
+__pycache__/
+*.pyc
+
+# Large model artifacts and checkpoints
+*.safetensors
+optimizer.pt
+unsloth_compiled_cache/
+

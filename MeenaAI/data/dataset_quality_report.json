@@ -1,0 +1,11 @@
+{
+  "total_rows": 12000,
+  "rows_with_question_and_answer": 12000,
+  "missing_question_or_answer": 0,
+  "duplicate_questions": 4,
+  "internal_generated_rows": 2453,
+  "external_test_split_rows": 9547,
+  "verified_rows": 0,
+  "training_ready": false,
+  "note": "Structural checks do not verify factual accuracy, aquaculture relevance, licensing, or benchmark contamination."
+}

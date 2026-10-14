@@ -1,0 +1,26 @@
+{
+  "pdf_files_found": 19,
+  "sources_processed": 19,
+  "raw_pages": 1053,
+  "nonempty_clean_pages": 1045,
+  "passages_created": 947,
+  "possible_scanned_or_low_text_pages": 16,
+  "warnings": [
+    "Possible scanned/low-text page: FAO-001.pdf, page 13",
+    "Possible scanned/low-text page: FAO-001.pdf, page 14",
+    "Possible scanned/low-text page: NACA-001.pdf, page 2",
+    "Possible scanned/low-text page: NACA-001.pdf, page 107",
+    "Possible scanned/low-text page: NACA-001.pdf, page 153",
+    "Possible scanned/low-text page: NACA-001.pdf, page 238",
+    "Possible scanned/low-text page: NACA-001.pdf, page 239",
+    "Possible scanned/low-text page: NACA-002.pdf, page 5",
+    "Possible scanned/low-text page: NACA-002.pdf, page 7",
+    "Possible scanned/low-text page: NACA-002.pdf, page 9",
+    "Possible scanned/low-text page: NACA-002.pdf, page 16",
+    "Possible scanned/low-text page: NACA-002.pdf, page 44",
+    "Possible scanned/low-text page: NACA-004.pdf, page 1",
+    "Possible scanned/low-text page: NACA-004.pdf, page 233",
+    "Possible scanned/low-text page: SRAC-001.pdf, page 10",
+    "Possible scanned/low-text page: SRAC-001.pdf, page 11"
+  ]
+}

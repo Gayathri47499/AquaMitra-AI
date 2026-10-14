@@ -1,0 +1,20 @@
+source_id,title,publisher,year,url,license,commercial_use,allowed_in_product,attribution,pages,status
+SRC-001,On-farm feeding and feed management in aquaculture,FAO,2013,https://www.fao.org/4/i3481e/i3481e00.htm,CC-BY-NC-SA 3.0,No,No,Yes,sources/pdfs/FAO-001.pdf,RESEARCH_ONLY
+SRC-002,Fish culture in undrainable ponds: A manual for extension,FAO,1992,https://www.fao.org/4/t0555e/T0555E00.htm,CC-BY-NC-SA 3.0,No,No,Yes,sources/pdfs/FAO-002.pdf,RESEARCH_ONLY
+SRC-003,Health management in Asian aquaculture,FAO,1996,https://www.fao.org/4/w3594e/W3594E00.htm,CC-BY-NC-SA 3.0,No,No,Yes,sources/pdfs/FAO-003.pdf,RESEARCH_ONLY
+SRC-004,Feeding and feed management of Indian major carps in Andhra Pradesh India,FAO,2013,https://www.fao.org/4/i3146e/i3146e.pdf,CC-BY-NC-SA 3.0,No,No,Yes,sources/pdfs/FAO-004.pdf,RESEARCH_ONLY
+SRC-005,Nutritional fish pathology: Morphological signs of nutrient deficiency and toxicity in farmed fish,FAO,1992,https://www.fao.org/4/t0700e/T0700E00.htm,CC-BY-NC-SA 3.0,No,No,Yes,sources/pdfs/FAO-005.pdf,RESEARCH_ONLY
+SRC-006,Training manual on improved tilapia culture and dyke cropping in pond/Gher,WorldFish,2011,https://hdl.handle.net/20.500.12348/1183,CC BY 4.0,Yes,Yes,Yes,sources/pdfs/WF-001.pdf,PRODUCT_APPROVED
+SRC-007,Practical training manual & Standard Operational Procedures for Tilapia breeding and all-male fry production,WorldFish,2021,https://digitalarchive.worldfishcenter.org/items/69733fa6-bef1-4a42-81f0-aab4fdf542bc,CC BY-NC 4.0,No,No,Yes,sources/pdfs/WF-002.pdf,RESEARCH_ONLY
+SRC-008,Better management practices for tilapia culture in Egypt,WorldFish,2020,https://digitalarchive.worldfishcenter.org/items/38c291be-af73-4cdc-9d4f-76fba1de5c65,CC BY-NC 4.0,No,No,Yes,sources/pdfs/WF-003.pdf,RESEARCH_ONLY
+SRC-009,Small-scale freshwater fish farming,Agromisa Foundation,2008,https://www.agromisa.org/,CC BY-NC-SA 3.0,No,No,Yes,sources/pdfs/AGRODOK-001.pdf,RESEARCH_ONLY
+SRC-010,Asia diagnostic guide for aquatic animal diseases,NACA,2002,https://enaca.org/,CC BY-NC-ND 4.0,No,No,Yes,sources/pdfs/NACA-001.pdf,RESEARCH_ONLY
+SRC-011,Shrimp health management extension manual,MPEDA/NACA,2003,https://library.enaca.org/Shrimp/manual/ShrimpHealthManual.pdf,CC BY-NC-ND 4.0,No,No,Yes,sources/pdfs/NACA-002.pdf,RESEARCH_ONLY
+SRC-012,Asia regional technical guidelines on health management for the responsible movement of live aquatic animals,FAO/NACA,2000,https://enaca.org/,CC BY-NC-SA 3.0,No,No,Yes,sources/pdfs/NACA-003.pdf,RESEARCH_ONLY
+SRC-013,The grass carp aquaculture manual: Guidelines,NACA,2023,https://enaca.org/bookshelf/,CC BY 4.0,Yes,Yes,Yes,sources/pdfs/NACA-004.pdf,PRODUCT_APPROVED
+SRC-016,Interpretation of water analysis reports for fish culture,SRAC,2012,https://srac.msstate.edu/WaterQuality.html,Public Domain,Yes,Yes,Yes,sources/pdfs/SRAC-001.pdf,PRODUCT_APPROVED
+SRC-017,Interactions of pH carbon dioxide alkalinity and hardness in fish ponds,SRAC,2012,https://srac.msstate.edu/WaterQuality.html,Public Domain,Yes,Yes,Yes,sources/pdfs/SRAC-002.pdf,PRODUCT_APPROVED
+SRC-018,Ammonia in fish ponds,SRAC,2012,https://srac.msstate.edu/WaterQuality.html,Public Domain,Yes,Yes,Yes,sources/pdfs/SRAC-003.pdf,PRODUCT_APPROVED
+SRC-019,Fertilizing fish ponds,SRAC,2012,https://srac.msstate.edu/WaterQuality.html,Public Domain,Yes,Yes,Yes,sources/pdfs/SRAC-004.pdf,PRODUCT_APPROVED
+SRC-020,Feeding catfish in commercial ponds,SRAC,2015,https://srac.tamu.edu/,Public Domain,Yes,Yes,Yes,sources/pdfs/SRAC-005.pdf,PRODUCT_APPROVED
+SRC-021,Recirculating aquaculture tank production systems: An overview,SRAC,2012,https://srac.tamu.edu/,Public Domain,Yes,Yes,Yes,sources/pdfs/SRAC-006.pdf,PRODUCT_APPROVED

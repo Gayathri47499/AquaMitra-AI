@@ -1,0 +1,18 @@
+{
+  "input_rows": 20986,
+  "structurally_screened_rows": 728,
+  "rows_needing_review": 20258,
+  "near_duplicate_rows_flagged": 2,
+  "review_reason_counts": {
+    "evidence_quote_not_found": 393,
+    "external_answer_needs_source_review": 19863
+  },
+  "screened_output": "C:\\Users\\gayat\\OneDrive\\Documents\\Desktop\\MeenaAI\\data\\quality_screened_candidates.jsonl",
+  "review_output": "C:\\Users\\gayat\\OneDrive\\Documents\\Desktop\\MeenaAI\\data\\quality_needs_review.jsonl",
+  "important_limitations": [
+    "Screening does not establish factual correctness.",
+    "External dataset licensing and provenance remain unverified.",
+    "Similarity detection uses question text and may miss paraphrases.",
+    "Rows in the screened file are not yet approved for model training."
+  ]
+}

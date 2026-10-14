@@ -1,0 +1,9 @@
+{
+  "input_passages": 947,
+  "eligible_for_next_review": 928,
+  "flagged_for_manual_review": 19,
+  "flag_reasons": {
+    "possible_front_matter": 19
+  },
+  "warning": "Eligible passages still require human/content-quality review. They are not automatically approved for Q&A generation."
+}

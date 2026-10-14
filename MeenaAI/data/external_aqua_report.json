@@ -1,0 +1,13 @@
+{
+  "dataset_id": "KurmaAI/AQUA-Test-Dataset",
+  "split": "test",
+  "input_rows": 20000,
+  "exported_rows": 20000,
+  "original_columns": [
+    "question",
+    "response"
+  ],
+  "license_status": "UNVERIFIED",
+  "usage_warning": "Split is named test. Do not use for training until intended use, provenance, licensing, and evaluation leakage are reviewed.",
+  "export_file": "C:\\Users\\gayat\\OneDrive\\Documents\\Desktop\\MeenaAI\\data\\external_aqua_raw.jsonl"
+}

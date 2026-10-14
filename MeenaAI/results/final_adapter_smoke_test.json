@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is aquaculture?",
+    "answer": "Aquaculture is the farming of aquatic animals, including fish, mollusks, crustaceans, and aquatic plants, in controlled environments such as ponds, tanks, cages, or raceways. It involves the cultivation, breeding, rearing, and harvesting of these organisms for food, ornamental, or other commercial purposes. Aquaculture can be practiced in freshwater (e.g., ponds, rivers, lakes) or marine (e.g., sea cages, tanks) environments, and it is a major source of protein and income for millions of people worldwide. The practice ranges from small-scale backyard"
+  },
+  {
+    "question": "Why is dissolved oxygen important in a fish pond?",
+    "answer": "Dissolved oxygen is essential for fish to survive and grow. It is the primary source of oxygen for fish, and its concentration in the water is critical for their health and productivity. Here’s why dissolved oxygen is so important in a fish pond:\n\n**1. Fish Respiration:**  \nFish extract dissolved oxygen from the water through their gills. Without sufficient dissolved oxygen, fish cannot respire properly, leading to stress, reduced growth, and even death.\n\n**2. Metabolic Processes:**  \nAdequate dissolved oxygen supports the metabolic processes of fish, including digestion, energy production, and immune"
+  },
+  {
+    "question": "What water quality factors should a fish farmer monitor?",
+    "answer": "A fish farmer should monitor water temperature, dissolved oxygen, pH, ammonia, nitrite, nitrate, salinity, turbidity, and alkalinity. Regular monitoring helps ensure optimal conditions for fish health and growth. For example, in intensive systems, dissolved oxygen should be maintained above 5 mg/L, while pH should be kept between 6.5 and 8.5. In brackish water systems, salinity is also a key parameter. Monitoring these factors helps prevent stress, disease, and poor growth in fish. Farmers can use simple test kits or digital meters for routine checks."
+  }
+]
